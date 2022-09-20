@@ -103,7 +103,7 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homeworks = check_response()
+            homeworks = check_response(response)
             if homeworks:
                 message = parse_status(homeworks[0])
                 if message != previous_message:

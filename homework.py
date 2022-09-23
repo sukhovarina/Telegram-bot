@@ -8,17 +8,19 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
+from endpoint import ENDPOINT
+
+
 load_dotenv()
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+TELEGRAM_RETRY_TIME = 600
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
-HOMEWORK_STATUSES = {
+HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -80,15 +82,15 @@ def parse_status(homework):
     if 'status' not in homework:
         raise KeyError('В словаре отсутствует ключ "status"')
     homework_status = homework['status']
-    if homework_status not in HOMEWORK_STATUSES:
+    if homework_status not in HOMEWORK_VERDICTS:
         raise KeyError('Недокументированный статус работы')
-    verdict = HOMEWORK_STATUSES[homework_status]
+    verdict = HOMEWORK_VERDICTS[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def check_tokens():
     """Проверка доступности переменных окружения."""
-    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
@@ -118,8 +120,8 @@ def main():
             if message != previous_message:
                 send_message(bot, message)
                 previous_message = message
-        else:
-            time.sleep(RETRY_TIME)
+        finally:
+            time.sleep(TELEGRAM_RETRY_TIME)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from http import HTTPStatus
 import logging
 import time
 import os
+import json
 
 import requests
 import telegram
@@ -58,7 +59,10 @@ def get_api_answer(current_timestamp):
             f'Код ответа API: {response.status_code}'
         )
         raise Exception(error)
-    return response.json()
+    try:
+        return response.json()
+    except json.decoder.JSONDecodeError:
+        print("Формат не соответствует формату JSON")
 
 
 def check_response(response):
@@ -90,16 +94,17 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка доступности переменных окружения."""
+    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]) is False:
+        logger.critical('Отсутствует обязательная переменная окружения.')
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
     """Основная логика работы бота."""
-    if check_tokens():
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    else:
+    if not check_tokens():
         logger.critical('Отсутствует обязательная переменная окружения.')
-        raise SystemExit('Программа принудительно остановлена.')
+        sys.exit()
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     previous_message = ''
     while True:

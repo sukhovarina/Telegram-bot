@@ -61,8 +61,9 @@ def get_api_answer(current_timestamp):
         raise Exception(error)
     try:
         return response.json()
-    except json.decoder.JSONDecodeError:
-        print("Формат не соответствует формату JSON")
+    except Exception:
+        error = "Формат не соответствует формату JSON"
+        raise json.decoder.JSONDecodeError(error)
 
 
 def check_response(response):
@@ -94,7 +95,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка доступности переменных окружения."""
-    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]) is False:
+    if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
         logger.critical('Отсутствует обязательная переменная окружения.')
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
